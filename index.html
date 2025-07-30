@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Finance Manager</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-4 min-h-screen">
+
+  <div class="max-w-xl mx-auto bg-white shadow-md rounded-xl p-6">
+    <h1 class="text-2xl font-bold text-center mb-4">💰 Finance Manager</h1>
+
+    <!-- Balance Section -->
+    <div class="mb-6">
+      <div class="flex justify-between items-center bg-blue-100 p-4 rounded-lg">
+        <div>
+          <p class="text-gray-600">Your Balance</p>
+          <h2 class="text-xl font-bold" id="balance">₹0</h2>
+        </div>
+        <div>
+          <p class="text-green-600">Income: <span id="income">₹0</span></p>
+          <p class="text-red-600">Expense: <span id="expense">₹0</span></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Transaction Form -->
+    <form id="transaction-form" class="space-y-3">
+      <input type="text" id="title" placeholder="Title" class="w-full p-2 border rounded" required />
+      <input type="number" id="amount" placeholder="Amount (use '-' for expenses)" class="w-full p-2 border rounded" required />
+      <input type="date" id="date" class="w-full p-2 border rounded" required />
+      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Add Transaction</button>
+    </form>
+
+    <!-- Transaction List -->
+    <h3 class="mt-6 mb-2 text-lg font-semibold">Transactions</h3>
+    <ul id="transaction-list" class="space-y-2"></ul>
+  </div>
+
+  <script>
+    const form = document.getElementById('transaction-form');
+    const list = document.getElementById('transaction-list');
+    const balanceEl = document.getElementById('balance');
+    const incomeEl = document.getElementById('income');
+    const expenseEl = document.getElementById('expense');
+
+    let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+
+    function renderTransactions() {
+      list.innerHTML = '';
+      let income = 0, expense = 0;
+
+      transactions.forEach((t, i) => {
+        const li = document.createElement('li');
+        li.className = `p-3 border-l-4 rounded ${t.amount > 0 ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'} flex justify-between items-center`;
+
+        li.innerHTML = `
+          <div>
+            <p class="font-medium">${t.title}</p>
+            <p class="text-sm text-gray-500">${t.date}</p>
+          </div>
+          <div class="text-right">
+            <p class="font-semibold">${t.amount > 0 ? '+' : ''}₹${t.amount}</p>
+            <button onclick="deleteTransaction(${i})" class="text-red-500 text-xs hover:underline">Delete</button>
+          </div>
+        `;
+
+        list.appendChild(li);
+
+        if (t.amount > 0) income += t.amount;
+        else expense += t.amount;
+      });
+
+      const balance = income + expense;
+      balanceEl.textContent = `₹${balance}`;
+      incomeEl.textContent = `₹${income}`;
+      expenseEl.textContent = `₹${Math.abs(expense)}`;
+    }
+
+    function deleteTransaction(index) {
+      transactions.splice(index, 1);
+      localStorage.setItem('transactions', JSON.stringify(transactions));
+      renderTransactions();
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+
+      const title = document.getElementById('title').value.trim();
+      const amount = parseFloat(document.getElementById('amount').value);
+      const date = document.getElementById('date').value;
+
+      if (!title || isNaN(amount) || !date) return;
+
+      const newTransaction = { title, amount, date };
+      transactions.push(newTransaction);
+
+      localStorage.setItem('transactions', JSON.stringify(transactions));
+      renderTransactions();
+
+      form.reset();
+    });
+
+    renderTransactions();
+  </script>
+</body>
+</html>
